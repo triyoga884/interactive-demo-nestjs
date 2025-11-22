@@ -14,6 +14,8 @@ import {
 import { AccountsService } from './accounts.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
+import { UserIdParamDto } from './dto/user-id-param.dto';
+import { IsString, IsNotEmpty } from 'class-validator';
 
 @Controller('accounts')
 export class AccountsController {
@@ -24,11 +26,9 @@ export class AccountsController {
     @Body(new ValidationPipe({ whitelist: true, transform: true }))
     body: CreateAccountDto,
   ) {
-    const duplicates = this.accountsService
-      .findAll(body.userId)
-      .some((a) => a.accountName === body.accountName);
-    if (duplicates) {
-      throw new ConflictException('Account with the same name already exists');
+    const existing = this.accountsService.findByUserId(body.userId);
+    if (existing) {
+      throw new ConflictException('Account for this user already exists');
     }
     return this.accountsService.create(body);
   }
@@ -38,34 +38,38 @@ export class AccountsController {
     return this.accountsService.findAll(userId);
   }
 
-  @Get(':id')
-  getAccount(@Param('id') id: string) {
-    const acc = this.accountsService.findOne(id);
+  @Get(':userId')
+  getAccount(
+    @Param(new ValidationPipe({ whitelist: true, transform: true })) params: UserIdParamDto,
+  ) {
+    const acc = this.accountsService.findByUserId(params.userId);
     if (!acc) {
       throw new NotFoundException('Account not found');
     }
     return acc;
   }
 
-  @Patch(':id')
+  @Patch(':userId')
   updateAccount(
-    @Param('id') id: string,
+    @Param(new ValidationPipe({ whitelist: true, transform: true })) params: UserIdParamDto,
     @Body(new ValidationPipe({ whitelist: true, transform: true }))
     body: UpdateAccountDto,
   ) {
-    const updated = this.accountsService.update(id, body);
+    const updated = this.accountsService.updateByUserId(params.userId, body);
     if (!updated) {
       throw new NotFoundException('Account not found');
     }
     return updated;
   }
 
-  @Delete(':id')
-  deleteAccount(@Param('id') id: string) {
-    const deleted = this.accountsService.remove(id);
+  @Delete(':userId')
+  deleteAccount(
+    @Param(new ValidationPipe({ whitelist: true, transform: true })) params: UserIdParamDto,
+  ) {
+    const deleted = this.accountsService.removeByUserId(params.userId);
     if (!deleted) {
       throw new NotFoundException('Account not found');
     }
-    return { message: 'Account deleted', id };
+    return { message: 'Account deleted', userId: params.userId };
   }
 }

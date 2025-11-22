@@ -3,7 +3,6 @@ import { AccountType, CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
 
 export interface Account {
-  id: string;
   userId: string;
   accountName: string;
   balance: number;
@@ -14,15 +13,13 @@ export interface Account {
 export class AccountsService {
   private accounts: Account[] = [
     {
-      id: 'acc_1',
-      userId: 'user123',
+      userId: '1',
       accountName: 'Primary Savings',
       balance: 1000000,
       accountType: AccountType.SAVINGS,
     },
     {
-      id: 'acc_2',
-      userId: 'user123',
+      userId: '2',
       accountName: 'Education Fund',
       balance: 5000000,
       accountType: AccountType.SAVINGS,
@@ -30,7 +27,11 @@ export class AccountsService {
   ];
 
   create(dto: CreateAccountDto): Account {
-    const account: Account = { ...dto, id: this.generateId() };
+    const existing = this.findByUserId(dto.userId);
+    if (existing) {
+      return existing;
+    }
+    const account: Account = { ...dto };
     this.accounts.push(account);
     return account;
   }
@@ -41,12 +42,12 @@ export class AccountsService {
       : this.accounts;
   }
 
-  findOne(id: string): Account | undefined {
-    return this.accounts.find((a) => a.id === id);
+  findByUserId(userId: string): Account | undefined {
+    return this.accounts.find((a) => a.userId === userId);
   }
 
-  update(id: string, dto: UpdateAccountDto): Account | undefined {
-    const idx = this.accounts.findIndex((a) => a.id === id);
+  updateByUserId(userId: string, dto: UpdateAccountDto): Account | undefined {
+    const idx = this.accounts.findIndex((a) => a.userId === userId);
     if (idx === -1) return undefined;
     const prev = this.accounts[idx];
     const updated: Account = { ...prev, ...dto };
@@ -54,13 +55,11 @@ export class AccountsService {
     return updated;
   }
 
-  remove(id: string): boolean {
+  removeByUserId(userId: string): boolean {
     const before = this.accounts.length;
-    this.accounts = this.accounts.filter((a) => a.id !== id);
+    this.accounts = this.accounts.filter((a) => a.userId !== userId);
     return this.accounts.length < before;
   }
 
-  private generateId(): string {
-    return 'acc_' + Math.random().toString(36).slice(2, 10);
-  }
+  // no id generation required when using userId as the identifier
 }
