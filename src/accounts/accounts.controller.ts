@@ -15,7 +15,6 @@ import { AccountsService } from './accounts.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { UserIdParamDto } from './dto/user-id-param.dto';
-import { IsString, IsNotEmpty } from 'class-validator';
 
 @Controller('accounts')
 export class AccountsController {
